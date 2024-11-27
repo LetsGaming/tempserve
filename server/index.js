@@ -3,8 +3,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser = require("cookie-parser");
 
-const authRoutes = require("./auth/authRouter");
-const tempRoutes = require("./router/tempRouter");
+const authRoutes = require("./src/auth/authRouter");
+const tempRoutes = require("./src/router/tempRouter");
 
 // Initialize the Express app
 const app = express();
