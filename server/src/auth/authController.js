@@ -6,9 +6,7 @@ const {
   JWT_REFRESH_SECRET,
   JWT_REFRESH_EXPIRATION,
 } = require("../config/jwtConfig");
-
-// Simulated database
-const users = [];
+const authService = require("./authService");
 
 // Helper functions to generate tokens
 const generateAccessToken = (user) => {
@@ -27,30 +25,25 @@ const generateRefreshToken = (user) => {
 const register = async (req, res) => {
   const { username, password } = req.body;
 
-  if (users.find((user) => user.username === username)) {
+  if (authService.findUserByUsername(username)) {
     return res.status(400).json({ message: "User already exists" });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = {
-    id: users.length + 1,
-    username,
-    password: hashedPassword,
-  };
 
-  users.push(newUser);
-  res.status(201).json({ message: "User registered successfully" });
+  const data = await authService.createUser(username, hashedPassword)
+  res.status(201).json({ message: "User registered successfully", username: data.username });
 };
 
 const login = async (req, res) => {
   const { username, password } = req.body;
 
-  const user = users.find((user) => user.username === username);
+  const user = await authService.findUserByUsername(username);
   if (!user) {
     return res.status(404).json({ message: "User not found" });
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
+  const isMatch = authService.comparePasswords(password, user.password);
   if (!isMatch) {
     return res.status(401).json({ message: "Invalid credentials" });
   }
