@@ -1,25 +1,25 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const {
+  JWT_SECRET,
+  JWT_EXPIRATION,
+  JWT_REFRESH_SECRET,
+  JWT_REFRESH_EXPIRATION,
+} = require("../config/jwtConfig");
 
 // Simulated database
 const users = [];
 
-// JWT secrets and configurations
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
-const REFRESH_SECRET = process.env.REFRESH_SECRET || "your_refresh_secret";
-const JWT_EXPIRES_IN = "15m";
-const REFRESH_EXPIRES_IN = "7d";
-
 // Helper functions to generate tokens
 const generateAccessToken = (user) => {
   return jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: JWT_EXPIRATION,
   });
 };
 
 const generateRefreshToken = (user) => {
-  return jwt.sign({ id: user.id }, REFRESH_SECRET, {
-    expiresIn: REFRESH_EXPIRES_IN,
+  return jwt.sign({ id: user.id }, JWT_REFRESH_SECRET, {
+    expiresIn: JWT_REFRESH_EXPIRATION,
   });
 };
 
@@ -89,3 +89,9 @@ const refreshAccessToken = (req, res) => {
   });
 };
 
+module.exports = {
+  register,
+  login,
+  logout,
+  refreshAccessToken,
+};
