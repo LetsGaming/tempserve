@@ -7,6 +7,7 @@ const {
   JWT_REFRESH_EXPIRATION,
 } = require("../config/jwtConfig");
 const authService = require("./authService");
+const { errorResponse, successResponse } = require("../utils/responseUtils");
 
 // Helper functions to generate tokens
 const generateAccessToken = (user) => {
@@ -26,13 +27,13 @@ const register = async (req, res) => {
   const { username, password } = req.body;
 
   if (authService.findUserByUsername(username)) {
-    return res.status(400).json({ message: "User already exists" });
+    return errorResponse(res, "Username already exists");
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const data = await authService.createUser(username, hashedPassword)
-  res.status(201).json({ message: "User registered successfully", username: data.username });
+  const data = await authService.createUser(username, hashedPassword);
+  successResponse(res, { username: data.username }, "User registered successfully", 201);
 };
 
 const login = async (req, res) => {
@@ -40,12 +41,12 @@ const login = async (req, res) => {
 
   const user = await authService.findUserByUsername(username);
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    return errorResponse(res, "Invalid username or password");
   }
 
   const isMatch = authService.comparePasswords(password, user.password);
   if (!isMatch) {
-    return res.status(401).json({ message: "Invalid credentials" });
+    return errorResponse(res, "Invalid username or password");
   }
 
   const accessToken = generateAccessToken(user);
@@ -57,28 +58,28 @@ const login = async (req, res) => {
     sameSite: "strict",
   });
 
-  res.status(200).json({ accessToken });
+  successResponse(res, {accessToken: accessToken });
 };
 
 const logout = (req, res) => {
   res.clearCookie("refreshToken");
-  res.status(200).json({ message: "Logged out successfully" });
+  successResponse(res, null, "Logged out successfully");
 };
 
 const refreshAccessToken = (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    return res.status(403).json({ message: "Refresh token not provided" });
+    return errorResponse(res, "Refresh token not provided");
   }
 
   jwt.verify(refreshToken, REFRESH_SECRET, (err, user) => {
     if (err) {
-      return res.status(403).json({ message: "Invalid refresh token" });
+      return errorResponse(res, "Invalid refresh token", 403);
     }
 
     const newAccessToken = generateAccessToken(user);
-    res.status(200).json({ accessToken: newAccessToken });
+    successResponse(res, { accessToken: newAccessToken });
   });
 };
 

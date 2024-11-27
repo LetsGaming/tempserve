@@ -6,10 +6,10 @@ const addTemp = (req, res) => {
   const { temperature } = req.body;
   try {
     if (!temperature) {
-      res.status(404);
+      return errorResponse(res, "Temperature is required", 404);
     }
-
-    const [result] = insertTemp(userId, temperature);
+    const parsedTemp = parseFloat(temperature);
+    const [result] = insertTemp(userId, parsedTemp);
     successResponse(res, result.id, 201);
   } catch (error) {
     errorResponse(res, error);
